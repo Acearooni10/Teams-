@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const { name, description, link } = req.body;
 
     // MongoDB connection URI (replace with your MongoDB Atlas URI)
-    const uri = 'YOUR_MONGODB_URI';
+    const uri = 'mongodb+srv://tznv4hc:gge5pq@cluster0.dpg2acw.mongodb.net/?retryWrites=true&w=majority';
     const client = new MongoClient(uri);
 
     try {
