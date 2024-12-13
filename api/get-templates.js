@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    const uri = 'YOUR_MONGODB_URI';
+    const uri = 'mongodb+srv://tznv4hc:gge5pq@cluster0.dpg2acw.mongodb.net/?retryWrites=true&w=majority';
     const client = new MongoClient(uri);
 
     try {
