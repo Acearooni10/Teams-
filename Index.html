@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord templates</title>
+  <title>Discord Templates</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,6 +26,7 @@
       padding: 20px;
       background: #23272a;
       border-radius: 8px;
+      animation: fadeIn 1s ease-in-out;
     }
     form input, form textarea, form button {
       margin: 10px 0;
@@ -38,6 +39,10 @@
       background-color: #7289da;
       color: white;
       cursor: pointer;
+      transition: transform 0.2s;
+    }
+    form button:hover {
+      transform: scale(1.05);
     }
     .template-list {
       margin-top: 20px;
@@ -50,6 +55,45 @@
       padding: 10px;
       border-radius: 5px;
       margin: 10px 0;
+      animation: slideIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .pagination button {
+      background-color: #7289da;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .pagination button:hover {
+      background-color: #5b6eae;
+    }
+    .discord-support {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .discord-support a {
+      color: #7289da;
+      text-decoration: none;
+      font-size: 1.2em;
+      transition: color 0.2s;
+    }
+    .discord-support a:hover {
+      color: #5b6eae;
     }
   </style>
 </head>
@@ -72,26 +116,45 @@
   <div class="container">
     <h2>Available Templates</h2>
     <div id="templateList" class="template-list"></div>
+    <div class="pagination">
+      <button id="prevPage">Previous</button>
+      <button id="nextPage">Next</button>
+    </div>
+  </div>
+
+  <div class="discord-support">
+    <p>Need help? Join our <a href="https://discord.gg/mydVzp4FWb" target="_blank">Discord Support Server</a>!</p>
   </div>
 
   <script>
-    // Fetch and display templates
-    async function fetchTemplates() {
-      const response = await fetch('/api/get-templates');
-      const templates = await response.json();
-      const templateList = document.getElementById('templateList');
-      templateList.innerHTML = '';
+    let currentPage = 1;
 
-      templates.forEach(template => {
-        const templateElement = document.createElement('div');
-        templateElement.classList.add('template-item');
-        templateElement.innerHTML = `
-          <strong>${template.name}</strong><br>
-          ${template.description}<br>
-          <a href="${template.link}" target="_blank">Join Template</a>
-        `;
-        templateList.appendChild(templateElement);
-      });
+    async function fetchTemplates(page = 1) {
+      try {
+        const response = await fetch(`/api/get-templates?page=${page}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch templates');
+        }
+
+        const templates = await response.json();
+        const templateList = document.getElementById('templateList');
+        templateList.innerHTML = '';
+
+        templates.forEach(template => {
+          const templateElement = document.createElement('div');
+          templateElement.classList.add('template-item');
+          templateElement.innerHTML = `
+            <strong>${template.name}</strong><br>
+            ${template.description}<br>
+            <a href="${template.link}" target="_blank">Join Template</a>
+          `;
+          templateList.appendChild(templateElement);
+        });
+      } catch (error) {
+        document.getElementById('message').innerText = 'Error loading templates.';
+        console.error(error);
+      }
     }
 
     document.getElementById("uploadTemplateForm").addEventListener("submit", async function(event) {
@@ -101,26 +164,47 @@
       const description = document.getElementById("templateDescription").value;
       const link = document.getElementById("templateLink").value;
 
-      const response = await fetch('/api/upload-template', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, description, link })
-      });
+      try {
+        const response = await fetch('/api/upload-template', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, description, link })
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          throw new Error('Failed to upload template');
+        }
 
-      if (data.success) {
-        document.getElementById("message").innerText = "Template uploaded successfully!";
-        fetchTemplates(); // Refresh the template list
-      } else {
+        const data = await response.json();
+
+        if (data.success) {
+          document.getElementById("message").innerText = "Template uploaded successfully!";
+          fetchTemplates(currentPage); // Refresh the template list
+        } else {
+          document.getElementById("message").innerText = "Error uploading template.";
+        }
+      } catch (error) {
         document.getElementById("message").innerText = "Error uploading template.";
+        console.error(error);
       }
     });
 
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        fetchTemplates(currentPage);
+      }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+      currentPage++;
+      fetchTemplates(currentPage);
+    });
+
     // Load templates on page load
-    window.onload = fetchTemplates;
+    window.onload = () => fetchTemplates(currentPage);
   </script>
 </body>
 </html>
